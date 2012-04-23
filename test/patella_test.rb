@@ -41,7 +41,7 @@ end
 
 class PatellaTest < ActiveSupport::TestCase
 
-  test "patella basics" do
+  def test_patella_basics
     # foreground
     f = Dummy.new 6
     f.stubs :caching_foo => 5
@@ -53,14 +53,14 @@ class PatellaTest < ActiveSupport::TestCase
       SendLaterWorker.stubs :perform_later => 'loading'
       f1 = Dummy.new 5
       assert f1.foo.loading?
-      assert_received(SendLater, :perform_later) do |ex|
+      assert_received(SendLaterWorker, :perform_later) do |ex|
         ex.once
         ex.with 'Dummy', f1.id, :caching_foo, []
       end
     end
   end
 
-  test "turning off background" do
+  def test_turning_off_background
     #background
     with_caching do
       SendLaterWorker.expects(:perform_later).never
@@ -72,7 +72,7 @@ class PatellaTest < ActiveSupport::TestCase
     end
   end
 
-  test "cache clearing" do
+  def cache_clearing
     d = Dummy.new(1)
     result = d.bar(4,5)  #load it by turning caching off
     assert result.loaded?
@@ -90,18 +90,18 @@ class PatellaTest < ActiveSupport::TestCase
     end
   end
 
-  test "patella for instance objs" do
+  def test_patella_for_instance_objs
     four = Dummy.new 4
     assert_equal(8, four.baz(4))
     assert_equal(13, four.baz(9))
   end
 
-  test "patella for class methods" do
+  def test_patella_for_class_methods
     assert Dummy.bing.loaded?
     assert_equal(3, Dummy.bing)
   end
 
-  test "keys" do
+  def test_keys
     d = Dummy.new 2
     assert_equal "patella/Dummy/2/foo/#{md5 [].to_json}", d.patella_key(:foo,[])
     assert_equal "patella/Dummy/2/foo/#{md5 [1].to_json}", d.patella_key(:foo,[1])
@@ -116,10 +116,10 @@ class PatellaTest < ActiveSupport::TestCase
     assert_equal "patella/Dummy/3/foo/#{md5 [1,"asdf" * 1000].to_json}", d3.patella_key(:foo,[1,"asdf" * 1000])
   end
 
-  test 'soft expiration' do
+  def test_soft_expiration
     dummy = Dummy.new 1
-    Rails.cache.stubs( :fetch => { 'result' => "loads of data", 'soft_expiration' => Time.now-1.minute }.to_json )
-    Rails.cache.stubs( :write => true )
+    ::Rails.cache.stubs( :fetch => { 'result' => "loads of data", 'soft_expiration' => Time.now-1.minute }.to_json )
+    ::Rails.cache.stubs( :write => true )
     dummy.stubs :send_later => 'loading'
     dummy.foo
     assert_received(Rails.cache, :write) { |ex| ex.once }
@@ -132,12 +132,13 @@ private
   end
 
   def with_caching(&block)
-    previous_caching = ActionController::Base.perform_caching
+    #previous_caching = ActionController::Base.perform_caching
     begin
-      ActionController::Base.perform_caching = true
+      Rails.cache.stubs(:caching? => true)
+      #ActionController::Base.perform_caching = true
       yield
     ensure
-      ActionController::Base.perform_caching = previous_caching
+      #ActionController::Base.perform_caching = previous_caching
     end
   end
 end

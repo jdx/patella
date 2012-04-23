@@ -14,9 +14,11 @@ Gem::Specification.new do |gem|
   gem.name          = "patella"
   gem.require_paths = ["lib"]
   gem.version       = Patella::VERSION
-  gem.add_dependency 'resque'
-  gem.add_dependency 'resque-scheduler'
-  gem.add_dependency 'activesupport' #, :require => 'active_support'
+  gem.add_dependency 'resque', '1.19.0'
+  gem.add_dependency 'activesupport', '2.3.12' #, :require => 'active_support'
+  gem.add_dependency 'rails', '2.3.12' #, :require => 'active_support'
+  gem.add_dependency 'json'
   gem.add_development_dependency 'bundler'
   gem.add_development_dependency 'rake'
+  gem.add_development_dependency 'mocha', '0.9.8'
 end
